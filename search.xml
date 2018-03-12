@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[函数的调用过程(栈帧)]]></title>
+    <url>%2F2018%2F03%2F12%2Ftt%2F</url>
+    <content type="text"><![CDATA[#函数的调用过程（栈帧） ##一、什么是栈帧 ###1、栈帧的概念1、首先引入百度百科的经典解释：“栈帧也叫过程活动记录，是编译器用来实现过程函数调用的一种数据结构。”。2、栈帧表示程序的函数调用记录，而栈帧又是记录在栈上面，很明显栈上保持了N个栈帧的实体，（实际上我们这里说的栈帧是软件上的概念，据说有硬件概念，不是很了解），那就可以说栈帧将分割成了N个记录块，但是这些记录块大小不是固定不变的，因为栈不仅保存诸如：函数入参，出参，返回地址和上一个栈帧的栈底指针等信息，还保存了函数内部的自动变量，因此不是所有的栈帧的大小都是相同。 ###2、代码分析栈帧12345678910111213141516#include &lt;stdio.h&gt;int Add(int x, int y)&#123; int z = 0; z = x + y; return z;&#125;int main()&#123; int a = 10; int b = 20; int ret = Add(a,b); printf(&quot;ret = %d\n&quot;,ret); return 0;&#125; 而我们发现其实main函数在__tmainCRTStartup函数中调用，而__tmainCRTStartup函数是在mainCRTStartup被调用。 我们知道每一次函数调用都是一个过程。这个过程我们通常称为：函数的调用过程。这个过程要为函数开辟空间，用于本次函数的调用中临时变量的保存、现场保护。这块栈空间我们称之为函数栈帧。 main函数并不是程序执行的第一个函数，但它是我们逻辑的入口函数。 而栈帧的维护我们必须了解ebp和esp两个寄存器。在函数调用的过程中这两个寄存器存放了维护这个栈的栈底和栈顶指针。 ###3、通过栈帧修改ret返回的地址测试环境vc6.01234567891011121314151617181920212223242526272829303132333435363738394041#include &lt;stdio.h&gt;#include &lt;windows.h&gt;void *ret = NULL;void bug()&#123; int first = 0; int *p = &amp;first; p+=2; *p= (int)ret; printf(&quot;I am a bug...\n&quot;);&#125;int myfun(int x,int y)&#123; int *p = &amp;x; p--; ret = *p; *p = bug; printf(&quot;run myfun...!\n&quot;); return 0; &#125;int main()&#123; int a = 0xaaaaaaaa; int b = 0xbbbbbbbb; int c; printf(&quot;main run...\n&quot;); c = myfun(a,b); &#125; printf(&quot;you should run here!\n&quot;); printf(&quot;res : %d\n&quot;,c); system(&quot;pause&quot;); return 0;&#125; 运行结果如图： 但是一按回车就会报错，在myfun函数中，本myfun函数执行完成，ret就会将弹出回到main函数的指令，可是通过我们修改把返回指令地址修改为bug函数，myfun函数执行完后，直接执行bug函数，由于执行bug函数没有使用call来调用，所以就没有将下一条指令的地址压入栈中，但是返回是却ret弹出了一个指令，导致最后回到main函数的栈帧大小不同于开始，所以会出现错误。修改，从ESP出多弹出了一个地址空间，所以ESP比之前大4，只要给ESP-4即可。在返回主函数后加一句汇编指令12345678910111213141516171819202122232425262728293031323334353637383940414243#include &lt;stdio.h&gt;#include &lt;windows.h&gt;void *ret = NULL;void bug()&#123; int first = 0; int *p = &amp;first; p+=2; *p= (int)ret; printf(&quot;I am a bug...\n&quot;);&#125;int myfun(int x,int y)&#123; int *p = &amp;x; p--; ret = *p; *p = bug; printf(&quot;run myfun...!\n&quot;); return 0; &#125;int main()&#123; int a = 0xaaaaaaaa; int b = 0xbbbbbbbb; int c; printf(&quot;main run...\n&quot;); c = myfun(a,b); __asm&#123; sub esp,4; //给esp减四 &#125; printf(&quot;you should run here!\n&quot;); printf(&quot;res : %d\n&quot;,c); system(&quot;pause&quot;); return 0;&#125; 回车正确！]]></content>
+      <categories>
+        <category>C语言</category>
+      </categories>
+      <tags>
+        <tag>栈帧</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[Hello World]]></title>
     <url>%2F2018%2F03%2F06%2Fhello-world%2F</url>
     <content type="text"><![CDATA[Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick StartCreate a new post1$ hexo new "My New Post" More info: Writing Run server1$ hexo server More info: Server Generate static files1$ hexo generate More info: Generating Deploy to remote sites1$ hexo deploy More info: Deployment]]></content>
